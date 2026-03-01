@@ -40,7 +40,11 @@ import {
   Instagram as InstagramIcon,
   Facebook as FacebookIcon,
   Clock as ClockIcon,
-  DollarSign
+  DollarSign,
+  Download,
+  FileText,
+  Calendar,
+  Filter
 } from 'lucide-react'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { toast } from 'sonner'
@@ -171,6 +175,12 @@ export default function AdminPage() {
     logo: ''
   })
   const [savingShopProfile, setSavingShopProfile] = useState(false)
+  
+  // Export dialog state
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [exportStartDate, setExportStartDate] = useState('')
+  const [exportEndDate, setExportEndDate] = useState('')
+  const [exportStatus, setExportStatus] = useState<'all' | 'completed' | 'pending'>('all')
 
   // WebSocket connection for admins
   useWebSocket(null, 'admin', {
@@ -756,6 +766,96 @@ export default function AdminPage() {
     }).length
   }
 
+  const exportToCSV = () => {
+    let filteredOrders = orders
+
+    // Filter by date range
+    if (exportStartDate) {
+      const startDate = new Date(exportStartDate)
+      startDate.setHours(0, 0, 0, 0)
+      filteredOrders = filteredOrders.filter(order => {
+        const orderDate = new Date(order.createdAt)
+        return orderDate >= startDate
+      })
+    }
+
+    if (exportEndDate) {
+      const endDate = new Date(exportEndDate)
+      endDate.setHours(23, 59, 59, 999)
+      filteredOrders = filteredOrders.filter(order => {
+        const orderDate = new Date(order.createdAt)
+        return orderDate <= endDate
+      })
+    }
+
+    // Filter by status
+    if (exportStatus !== 'all') {
+      filteredOrders = filteredOrders.filter(order => order.status === exportStatus)
+    }
+
+    if (filteredOrders.length === 0) {
+      toast.error('Tidak ada data untuk di-export', {
+        description: 'Coba ubah filter tanggal atau status',
+        position: 'top-center'
+      })
+      return
+    }
+
+    // Create CSV content
+    const headers = [
+      'ID Pesanan',
+      'Tanggal',
+      'Nama Pelanggan',
+      'No HP',
+      'Alamat',
+      'Status',
+      'Total',
+      'Item Pesanan'
+    ]
+
+    const rows = filteredOrders.map(order => {
+      const items = order.items.map(item => `${item.product.name} (x${item.quantity})`).join('; ')
+      return [
+        `#${order.id.slice(-6).toUpperCase()}`,
+        new Date(order.createdAt).toLocaleString('id-ID'),
+        order.userName,
+        order.userPhone,
+        order.userAddress,
+        order.status,
+        `Rp ${order.total.toLocaleString('id-ID')}`,
+        items
+      ]
+    })
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+
+    // Create and download file
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    
+    const fileName = `laporan-penjualan-${new Date().toISOString().split('T')[0]}.csv`
+    link.setAttribute('href', url)
+    link.setAttribute('download', fileName)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    toast.success('Laporan berhasil di-export!', {
+      description: `${filteredOrders.length} pesanan telah di-download`,
+      position: 'top-center'
+    })
+
+    setExportDialogOpen(false)
+    setExportStartDate('')
+    setExportEndDate('')
+    setExportStatus('all')
+  }
+
   const printReceipt = (order: Order) => {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
@@ -993,6 +1093,104 @@ export default function AdminPage() {
             </Card>
           </motion.div>
         </div>
+
+        {/* Export Button */}
+        <div className="flex justify-end mb-3 sm:mb-4">
+          <Button
+            onClick={() => setExportDialogOpen(true)}
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 shadow-md hover:shadow-lg transition-all"
+          >
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+            <span className="hidden sm:inline">Export Laporan</span>
+            <span className="sm:hidden">Export</span>
+          </Button>
+        </div>
+
+        {/* Export Dialog */}
+        <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+          <DialogContent className="max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-orange-600">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
+                Export Laporan Penjualan
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Tanggal Mulai
+                </label>
+                <Input
+                  type="date"
+                  value={exportStartDate}
+                  onChange={(e) => setExportStartDate(e.target.value)}
+                  className="border-orange-200 focus-visible:ring-orange-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Tanggal Akhir
+                </label>
+                <Input
+                  type="date"
+                  value={exportEndDate}
+                  onChange={(e) => setExportEndDate(e.target.value)}
+                  className="border-orange-200 focus-visible:ring-orange-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Status Pesanan
+                </label>
+                <Select value={exportStatus} onValueChange={(value: any) => setExportStatus(value)}>
+                  <SelectTrigger className="border-orange-200 focus-visible:ring-orange-500">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    <SelectItem value="completed">Selesai</SelectItem>
+                    <SelectItem value="pending">Menunggu</SelectItem>
+                    <SelectItem value="approved">Disetujui</SelectItem>
+                    <SelectItem value="processing">Diproses</SelectItem>
+                    <SelectItem value="cancelled">Batal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-xs sm:text-sm text-gray-600">
+                <p className="font-medium mb-1">💡 Tips:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Kosongkan tanggal untuk export semua data</li>
+                  <li>File akan diunduh dalam format CSV</li>
+                  <li>Bisa dibuka di Excel, Google Sheets, dll</li>
+                </ul>
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setExportDialogOpen(false)
+                  setExportStartDate('')
+                  setExportEndDate('')
+                  setExportStatus('all')
+                }}
+                className="w-full sm:w-auto border-orange-200 text-gray-700 hover:bg-orange-50"
+              >
+                Batal
+              </Button>
+              <Button
+                onClick={exportToCSV}
+                className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Tabs */}
         <Tabs defaultValue="orders" className="space-y-3 sm:space-y-6">
