@@ -4,6 +4,12 @@
   "devCommand": "bun run dev",
   "installCommand": "bun install",
   "framework": "nextjs",
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "master": true
+    }
+  },
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30

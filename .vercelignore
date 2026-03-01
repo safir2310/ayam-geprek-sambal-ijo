@@ -1,0 +1,27 @@
+# Test files
+test
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+*.md
+!README.md
+
+# Logs
+*.log
+dev.log
+
+# Local files
+.local
+local-*
+
+# Config files
+.env.example
+.prettierrc
+.eslintrc
+
+# Skills and work logs
+/skills/
+/worklog.md
