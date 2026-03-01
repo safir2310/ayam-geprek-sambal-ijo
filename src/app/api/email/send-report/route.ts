@@ -301,7 +301,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Ayam Geprek Sambal Ijo <noreply@ayamgeprek.com>',
+        from: 'Ayam Geprek Sambal Ijo <musafir2310@gamail.com>',
         to: recipientEmail,
         subject: `📊 Laporan Penjualan ${scheduleText} - ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}`,
         html: emailHTML,

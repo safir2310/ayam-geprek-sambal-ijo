@@ -6,6 +6,30 @@ Fitur laporan penjualan via email memungkinkan admin untuk mengirim laporan otom
 
 ---
 
+## 📧 Email Sender Configuration
+
+### Primary Email (Aktif Saat Ini)
+
+**Email Sender:** `musafir2310@gamail.com`
+
+Email ini digunakan sebagai pengirim email untuk semua laporan penjualan.
+
+### Email Alternatif (Jika Perlu Diganti)
+
+Jika ingin mengganti email sender:
+
+1. **Buka file:** `/src/app/api/email/send-report/route.ts`
+2. **Cari baris:**
+   ```typescript
+   from: 'Ayam Geprek Sambal Ijo <musafir2310@gamail.com>'
+   ```
+3. **Ganti dengan email yang diinginkan:**
+   ```typescript
+   from: 'Ayam Geprek Sambal Ijo <email-anda@domain.com>'
+   ```
+
+---
+
 ## 🔧 Setup Email Service
 
 ### Langkah 1: Daftar ke Resend
