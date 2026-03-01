@@ -30,6 +30,53 @@ Jika ingin mengganti email sender:
 
 ---
 
+### Email Alternatif untuk Dipertimbangkan
+
+Jika Anda memiliki beberapa email dan ingin mengganti email sender, berikut beberapa pilihan:
+
+**Option 1: Gmail Personal (Tidak Direkomendasikan untuk Production)**
+- Email: `musafir2310@gmail.com` (atau email Gmail lain)
+- Kelebihan:
+  - Gratis dan mudah setup
+- Tersedia di semua device
+- Kekurangan:
+  - Bisa kena limit per hari (500 emails/day)
+  - Risiko di-anggap dianggap spam
+- Pengalaman harus dihapus untuk me-reset limit
+- Tidak cocok untuk business production (bisa di-block kapan saja)
+
+**Option 2: Email Service (Recommended untuk Business)**
+- Zoho Mail - https://www.zoho.com/mail (Free tier: 5 emails/day, 50 emails/month)
+- SendGrid - https://sendgrid.com (Free tier: 100 emails/day)
+- Amazon SES - https://aws.amazon.com/ses/ (Pay as you go)
+- Mailgun - https://www.mailgun.com (Free tier: 5,000 emails/month)
+
+**Option 3: Hosting Email**
+- CPanel / DirectAdmin email
+- Hostinger email
+- Namecheap email
+- Email hosting yang sudah ada
+
+**Option 4: SMTP Server Sendiri**
+- Self-hosted email server (Postfix, Exim, Mail-in-a-Box)
+- Memerlukan teknis setup yang kompleks
+- Perlu manage sendiri reputation dan deliverability
+
+**Catatan Penting:**
+- Untuk production, gunakan email business email (bukan Gmail personal)
+- Pastikan email sender sudah ter-verify di Resend (lihat section "Verifikasi Domain Email" di bawah)
+
+### Rekomendasi untuk Ayam Geprek Sambal Ijo:
+
+**Untuk Sekarang:**
+- ✅ `musafir2310@gamail.com` (Email yang di-set saat ini)
+
+**Untuk Production:**
+- Gunakan email bisnis seperti: `info@ayamgepreksambalijo.com`
+- Buat email di domain sendiri (lebih profesional)
+
+---
+
 ## 🔧 Setup Email Service
 
 ### Langkah 1: Daftar ke Resend
