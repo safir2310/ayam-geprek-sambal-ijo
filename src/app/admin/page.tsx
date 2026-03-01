@@ -39,7 +39,8 @@ import {
   Phone as PhoneIcon,
   Instagram as InstagramIcon,
   Facebook as FacebookIcon,
-  Clock as ClockIcon
+  Clock as ClockIcon,
+  DollarSign
 } from 'lucide-react'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { toast } from 'sonner'
@@ -729,6 +730,32 @@ export default function AdminPage() {
     }
   }
 
+  const getTodaySales = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const todayOrders = orders.filter(order => {
+      const orderDate = new Date(order.createdAt)
+      const orderDateStart = new Date(orderDate)
+      orderDateStart.setHours(0, 0, 0, 0)
+      return orderDateStart.getTime() === today.getTime() && order.status === 'completed'
+    })
+
+    return todayOrders.reduce((total, order) => total + order.total, 0)
+  }
+
+  const getTodayCompletedOrders = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    return orders.filter(order => {
+      const orderDate = new Date(order.createdAt)
+      const orderDateStart = new Date(orderDate)
+      orderDateStart.setHours(0, 0, 0, 0)
+      return orderDateStart.getTime() === today.getTime() && order.status === 'completed'
+    }).length
+  }
+
   const printReceipt = (order: Order) => {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
@@ -840,7 +867,7 @@ export default function AdminPage() {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-2 sm:px-4 py-3 sm:py-6">
         {/* Stats Cards - Mobile Friendly Hero Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
           {/* Total Products Card */}
           <motion.div
             whileHover={{ scale: 1.02, y: -2 }}
@@ -935,6 +962,31 @@ export default function AdminPage() {
                   </div>
                   <div className="bg-gradient-to-br from-yellow-400 to-orange-500 p-2.5 sm:p-3 rounded-xl shadow-md shadow-yellow-300/50">
                     <Clock className="w-5 h-5 sm:w-6 sm:h-6 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Today's Sales Card - NEW */}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-white hover:shadow-lg hover:shadow-emerald-200/50 transition-all duration-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-emerald-200/30 to-emerald-300/20 rounded-bl-full" />
+              <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6 relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 font-medium mb-1">Penjualan Hari Ini</p>
+                    <p className="text-lg sm:text-xl md:text-lg lg:text-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">
+                      Rp {(getTodaySales() / 1000).toFixed(0)}K
+                    </p>
+                    <p className="text-[9px] sm:text-xs text-gray-400 mt-1 hidden sm:block">{getTodayCompletedOrders()} pesanan selesai</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-emerald-400 to-teal-600 p-2.5 sm:p-3 rounded-xl shadow-md shadow-emerald-300/50">
+                    <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
                 </div>
               </CardContent>
