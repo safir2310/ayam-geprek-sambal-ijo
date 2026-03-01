@@ -839,54 +839,107 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-2 sm:px-4 py-3 sm:py-6">
-        {/* Stats Cards */}
+        {/* Stats Cards - Mobile Friendly Hero Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <Card className="border-2 border-orange-100">
-            <CardContent className="pt-4 sm:pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] sm:text-sm text-gray-500">Total Produk</p>
-                  <p className="text-xl sm:text-2xl font-bold text-orange-600">{products.length}</p>
+          {/* Total Products Card */}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-white hover:shadow-lg hover:shadow-orange-200/50 transition-all duration-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-orange-200/30 to-orange-300/20 rounded-bl-full" />
+              <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6 relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 font-medium mb-1">Total Produk</p>
+                    <p className="text-2xl sm:text-3xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+                      {products.length}
+                    </p>
+                    <p className="text-[9px] sm:text-xs text-gray-400 mt-1 hidden sm:block">Item tersedia</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-2.5 sm:p-3 rounded-xl shadow-md shadow-orange-300/50">
+                    <Package className="w-5 h-5 sm:w-6 sm:h-6 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
+                  </div>
                 </div>
-                <Package className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-2 border-orange-100">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] sm:text-sm text-gray-500">Total User</p>
-                  <p className="text-xl sm:text-2xl font-bold text-orange-600">{users.length}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Total Users Card */}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white hover:shadow-lg hover:shadow-blue-200/50 transition-all duration-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-200/30 to-blue-300/20 rounded-bl-full" />
+              <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6 relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 font-medium mb-1">Total User</p>
+                    <p className="text-2xl sm:text-3xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
+                      {users.length}
+                    </p>
+                    <p className="text-[9px] sm:text-xs text-gray-400 mt-1 hidden sm:block">Terdaftar</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-2.5 sm:p-3 rounded-xl shadow-md shadow-blue-300/50">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
+                  </div>
                 </div>
-                <Users className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-2 border-orange-100">
-            <CardContent className="pt-4 sm:pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] sm:text-sm text-gray-500">Total Pesanan</p>
-                  <p className="text-xl sm:text-2xl font-bold text-orange-600">{orders.length}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Total Orders Card */}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-white hover:shadow-lg hover:shadow-green-200/50 transition-all duration-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-green-200/30 to-green-300/20 rounded-bl-full" />
+              <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6 relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 font-medium mb-1">Total Pesanan</p>
+                    <p className="text-2xl sm:text-3xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent">
+                      {orders.length}
+                    </p>
+                    <p className="text-[9px] sm:text-xs text-gray-400 mt-1 hidden sm:block">Semua status</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-green-400 to-green-600 p-2.5 sm:p-3 rounded-xl shadow-md shadow-green-300/50">
+                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
+                  </div>
                 </div>
-                <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-2 border-orange-100">
-            <CardContent className="pt-4 sm:pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] sm:text-sm text-gray-500">Pending</p>
-                  <p className="text-xl sm:text-2xl font-bold text-orange-600">
-                    {orders.filter(o => o.status === 'pending').length}
-                  </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Pending Orders Card */}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-white hover:shadow-lg hover:shadow-yellow-200/50 transition-all duration-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-yellow-200/30 to-yellow-300/20 rounded-bl-full" />
+              <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6 relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 font-medium mb-1">Pending</p>
+                    <p className="text-2xl sm:text-3xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">
+                      {orders.filter(o => o.status === 'pending').length}
+                    </p>
+                    <p className="text-[9px] sm:text-xs text-gray-400 mt-1 hidden sm:block">Menunggu konfirmasi</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-yellow-400 to-orange-500 p-2.5 sm:p-3 rounded-xl shadow-md shadow-yellow-300/50">
+                    <Clock className="w-5 h-5 sm:w-6 sm:h-6 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
+                  </div>
                 </div>
-                <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         {/* Tabs */}
