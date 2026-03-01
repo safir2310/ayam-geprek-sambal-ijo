@@ -18,6 +18,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { motion } from 'framer-motion'
 import {
   ChefHat,
@@ -44,7 +45,11 @@ import {
   Download,
   FileText,
   Calendar,
-  Filter
+  Filter,
+  Mail,
+  Send,
+  Settings,
+  Info
 } from 'lucide-react'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { toast } from 'sonner'
@@ -181,6 +186,16 @@ export default function AdminPage() {
   const [exportStartDate, setExportStartDate] = useState('')
   const [exportEndDate, setExportEndDate] = useState('')
   const [exportStatus, setExportStatus] = useState<'all' | 'completed' | 'pending'>('all')
+  
+  // Email settings state
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false)
+  const [emailSettings, setEmailSettings] = useState({
+    recipientEmail: user?.email || '',
+    emailSchedule: 'daily', // 'daily', 'weekly', 'monthly'
+    includePending: true,
+    includeCancelled: false
+  })
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   // WebSocket connection for admins
   useWebSocket(null, 'admin', {
@@ -856,6 +871,109 @@ export default function AdminPage() {
     setExportStatus('all')
   }
 
+  const sendEmailReport = async () => {
+    if (!emailSettings.recipientEmail) {
+      toast.error('Email penerima wajib diisi', {
+        description: 'Silakan masukkan alamat email penerima',
+        position: 'top-center'
+      })
+      return
+    }
+
+    setSendingEmail(true)
+
+    try {
+      // Calculate date range based on schedule
+      const now = new Date()
+      let startDate = new Date()
+      
+      switch (emailSettings.emailSchedule) {
+        case 'daily':
+          startDate.setHours(0, 0, 0, 0)
+          break
+        case 'weekly':
+          startDate.setDate(now.getDate() - 7)
+          startDate.setHours(0, 0, 0, 0)
+          break
+        case 'monthly':
+          startDate.setDate(1)
+          startDate.setHours(0, 0, 0, 0)
+          break
+      }
+
+      const endDate = new Date()
+      endDate.setHours(23, 59, 59, 999)
+
+      // Filter orders based on settings
+      let filteredOrders = orders.filter(order => {
+        const orderDate = new Date(order.createdAt)
+        return orderDate >= startDate && orderDate <= endDate
+      })
+
+      // Filter by status
+      if (!emailSettings.includePending) {
+        filteredOrders = filteredOrders.filter(order => order.status !== 'pending')
+      }
+      if (!emailSettings.includeCancelled) {
+        filteredOrders = filteredOrders.filter(order => order.status !== 'cancelled')
+      }
+
+      if (filteredOrders.length === 0) {
+        toast.warning('Tidak ada pesanan untuk dilaporkan', {
+          description: 'Tidak ada pesanan yang sesuai dengan filter pada periode ini',
+          position: 'top-center'
+        })
+        setSendingEmail(false)
+        return
+      }
+
+      // Prepare report data
+      const totalSales = filteredOrders.reduce((sum, order) => sum + order.total, 0)
+      const completedOrders = filteredOrders.filter(o => o.status === 'completed').length
+      const pendingOrders = filteredOrders.filter(o => o.status === 'pending').length
+
+      const reportData = {
+        recipientEmail: emailSettings.recipientEmail,
+        schedule: emailSettings.emailSchedule,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        totalOrders: filteredOrders.length,
+        totalSales,
+        completedOrders,
+        pendingOrders,
+        orders: filteredOrders
+      }
+
+      const res = await fetch('/api/email/send-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reportData)
+      })
+
+      if (res.ok) {
+        toast.success('Laporan berhasil dikirim!', {
+          description: `Email telah dikirim ke ${emailSettings.recipientEmail}`,
+          position: 'top-center'
+        })
+        setEmailDialogOpen(false)
+      } else {
+        const data = await res.json()
+        toast.error('Gagal mengirim email', {
+          description: data.error || 'Silakan coba lagi nanti',
+          position: 'top-center'
+        })
+      }
+    } catch (error) {
+      console.error('[sendEmailReport] Error:', error)
+      toast.error('Terjadi kesalahan', {
+        description: 'Silakan coba lagi nanti',
+        position: 'top-center'
+      })
+    } finally {
+      setSendingEmail(false)
+    }
+  }
+
   const printReceipt = (order: Order) => {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
@@ -1094,8 +1212,16 @@ export default function AdminPage() {
           </motion.div>
         </div>
 
-        {/* Export Button */}
-        <div className="flex justify-end mb-3 sm:mb-4">
+        {/* Export Button & Email Button */}
+        <div className="flex gap-2 justify-end mb-3 sm:mb-4">
+          <Button
+            onClick={() => setEmailDialogOpen(true)}
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 shadow-md hover:shadow-lg transition-all"
+          >
+            <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+            <span className="hidden sm:inline">Kirim Laporan</span>
+            <span className="sm:hidden">Email</span>
+          </Button>
           <Button
             onClick={() => setExportDialogOpen(true)}
             className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 shadow-md hover:shadow-lg transition-all"
@@ -1187,6 +1313,108 @@ export default function AdminPage() {
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Email Report Dialog */}
+        <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+          <DialogContent className="max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-orange-600">
+                <Mail className="w-5 h-5 sm:w-6 sm:h-6" />
+                Kirim Laporan via Email
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  Email Penerima
+                </label>
+                <Input
+                  type="email"
+                  placeholder="admin@example.com"
+                  value={emailSettings.recipientEmail}
+                  onChange={(e) => setEmailSettings({ ...emailSettings, recipientEmail: e.target.value })}
+                  className="border-orange-200 focus-visible:ring-orange-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Jadwal Laporan
+                </label>
+                <Select value={emailSettings.emailSchedule} onValueChange={(value: any) => setEmailSettings({ ...emailSettings, emailSchedule: value })}>
+                  <SelectTrigger className="border-orange-200 focus-visible:ring-orange-500">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Harian (Hari Ini)</SelectItem>
+                    <SelectItem value="weekly">Mingguan (7 Hari Terakhir)</SelectItem>
+                    <SelectItem value="monthly">Bulanan (Bulan Ini)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-3">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Status Pesanan yang Disertakan
+                </label>
+                <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <span className="text-sm">Sertakan pesanan pending</span>
+                  <Switch
+                    checked={emailSettings.includePending}
+                    onCheckedChange={(checked) => setEmailSettings({ ...emailSettings, includePending: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <span className="text-sm">Sertakan pesanan dibatalkan</span>
+                  <Switch
+                    checked={emailSettings.includeCancelled}
+                    onCheckedChange={(checked) => setEmailSettings({ ...emailSettings, includeCancelled: checked })}
+                  />
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs sm:text-sm text-gray-700">
+                <p className="font-medium mb-2 flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  Informasi Laporan:
+                </p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Ringkasan penjualan dan statistik</li>
+                  <li>Daftar semua pesanan sesuai filter</li>
+                  <li>File CSV terlampir dalam email</li>
+                  <li>Untuk auto-email perlu setup cron job</li>
+                </ul>
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setEmailDialogOpen(false)}
+                disabled={sendingEmail}
+                className="w-full sm:w-auto border-orange-200 text-gray-700 hover:bg-orange-50"
+              >
+                Batal
+              </Button>
+              <Button
+                onClick={sendEmailReport}
+                disabled={sendingEmail}
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+              >
+                {sendingEmail ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    Mengirim...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Kirim Email
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
