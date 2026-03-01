@@ -233,6 +233,10 @@ This project is proprietary software.
 
 **Safir** - [@safir2310](https://github.com/safir2310)
 
+## 🚀 Deployment History
+
+- **Last Deployed:** 2025-01-18
+
 ## 🙏 Acknowledgments
 
 - [shadcn/ui](https://ui.shadcn.com/) for beautiful UI components
