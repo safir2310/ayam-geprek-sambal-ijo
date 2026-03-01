@@ -102,7 +102,7 @@ export default function LoginPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-2xl font-bold text-orange-600"
+              className="text-2xl font-bold text-white"
             >
               AYAM GEPREK SAMBAL IJO
             </motion.h1>
