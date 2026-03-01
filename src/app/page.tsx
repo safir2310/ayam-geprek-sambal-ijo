@@ -16,7 +16,7 @@ import {
   DialogDescription
 } from '@/components/ui/dialog'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingCart, ChefHat, User, Instagram, Facebook, Phone, MapPin, X, Plus, Minus } from 'lucide-react'
+import { ShoppingCart, ChefHat, User, Instagram, Facebook, Phone, MapPin, X, Plus, Minus, Search, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useWebSocket } from '@/hooks/useWebSocket'
 
@@ -79,6 +79,7 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([])
   const [shopProfile, setShopProfile] = useState<any>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState<string>('')
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [redeemCode, setRedeemCode] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -348,8 +349,29 @@ export default function Home() {
   }
 
   const filteredProducts = selectedCategory === 'all'
-    ? products.filter((product) => !product.isRedeemable)
-    : products.filter((product) => !product.isRedeemable && product.category.name.toLowerCase() === selectedCategory)
+    ? products.filter((product) => {
+        if (product.isRedeemable) return false
+        if (!searchQuery.trim()) return true
+        const query = searchQuery.toLowerCase()
+        return (
+          product.name.toLowerCase().includes(query) ||
+          product.description?.toLowerCase().includes(query) ||
+          product.category.name.toLowerCase().includes(query)
+        )
+      })
+    : products.filter((product) => {
+        if (product.isRedeemable) return false
+        if (!searchQuery.trim()) {
+          return product.category.name.toLowerCase() === selectedCategory
+        }
+        const query = searchQuery.toLowerCase()
+        return (
+          product.category.name.toLowerCase() === selectedCategory &&
+          (product.name.toLowerCase().includes(query) ||
+            product.description?.toLowerCase().includes(query) ||
+            product.category.name.toLowerCase().includes(query))
+        )
+      })
 
   const getDiscountedPrice = (product: Product) => {
     return product.discount > 0
@@ -624,8 +646,49 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Search Bar - Sticky */}
+      <section className="bg-white sticky top-14 sm:top-16 z-40 border-b border-orange-100 shadow-sm">
+        <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative"
+          >
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-orange-400" />
+            <Input
+              type="text"
+              placeholder="Cari menu favoritmu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 sm:pl-11 pr-8 sm:pr-10 py-2.5 sm:py-3 text-sm sm:text-base border-orange-200 focus-visible:ring-orange-500 focus-visible:border-orange-400 bg-orange-50/50 hover:bg-orange-50 transition-all"
+            />
+            {searchQuery && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+              </motion.button>
+            )}
+          </motion.div>
+          {searchQuery && (
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs sm:text-sm text-gray-500 mt-2"
+            >
+              Menampilkan hasil untuk: <span className="font-semibold text-orange-600">"{searchQuery}"</span>
+              {filteredProducts.length > 0 && ` (${filteredProducts.length} hasil)`}
+            </motion.p>
+          )}
+        </div>
+      </section>
+
       {/* Categories */}
-      <section className="py-3 sm:py-4 bg-white sticky top-14 sm:top-16 z-40 border-b border-orange-100 shadow-sm">
+      <section className="py-3 sm:py-4 bg-white sticky top-[88px] sm:top-[120px] z-30 border-b border-orange-100 shadow-sm">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <Button
