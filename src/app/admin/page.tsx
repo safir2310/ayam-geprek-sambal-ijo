@@ -186,6 +186,7 @@ export default function AdminPage() {
   const [exportStartDate, setExportStartDate] = useState('')
   const [exportEndDate, setExportEndDate] = useState('')
   const [exportStatus, setExportStatus] = useState<'all' | 'completed' | 'pending'>('all')
+  const [exportFormat, setExportFormat] = useState<'csv' | 'xlsx'>('csv')
   
   // Email settings state
   const [emailDialogOpen, setEmailDialogOpen] = useState(false)
@@ -781,7 +782,7 @@ export default function AdminPage() {
     }).length
   }
 
-  const exportToCSV = () => {
+  const exportReport = () => {
     let filteredOrders = orders
 
     // Filter by date range
@@ -816,7 +817,22 @@ export default function AdminPage() {
       return
     }
 
-    // Create CSV content
+    if (exportFormat === 'xlsx') {
+      // Export to Excel (XLSX)
+      exportToExcel(filteredOrders)
+    } else {
+      // Export to CSV
+      exportToCSV(filteredOrders)
+    }
+
+    setExportDialogOpen(false)
+    setExportStartDate('')
+    setExportEndDate('')
+    setExportStatus('all')
+    setExportFormat('csv')
+  }
+
+  const exportToCSV = (filteredOrders: Order[]) => {
     const headers = [
       'ID Pesanan',
       'Tanggal',
@@ -851,7 +867,7 @@ export default function AdminPage() {
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
-    
+
     const fileName = `laporan-penjualan-${new Date().toISOString().split('T')[0]}.csv`
     link.setAttribute('href', url)
     link.setAttribute('download', fileName)
@@ -861,14 +877,85 @@ export default function AdminPage() {
     document.body.removeChild(link)
 
     toast.success('Laporan berhasil di-export!', {
-      description: `${filteredOrders.length} pesanan telah di-download`,
+      description: `${filteredOrders.length} pesanan telah di-download (CSV)`,
       position: 'top-center'
     })
+  }
 
-    setExportDialogOpen(false)
-    setExportStartDate('')
-    setExportEndDate('')
-    setExportStatus('all')
+  const exportToExcel = (filteredOrders: Order[]) => {
+    // Import xlsx dynamically
+    import('xlsx').then((XLSX) => {
+      // Prepare data for Excel
+      const data = filteredOrders.map(order => {
+        const items = order.items.map(item => `${item.product.name} (x${item.quantity})`).join('; ')
+        return {
+          'ID Pesanan': `#${order.id.slice(-6).toUpperCase()}`,
+          'Tanggal': new Date(order.createdAt).toLocaleString('id-ID'),
+          'Nama Pelanggan': order.userName,
+          'No HP': order.userPhone,
+          'Alamat': order.userAddress,
+          'Status': order.status,
+          'Total': order.total,
+          'Item Pesanan': items
+        }
+      })
+
+      // Calculate summary
+      const summary = [
+        {
+          '': 'RINGKASAN',
+          'Total Pesanan': filteredOrders.length,
+          'Total Penjualan': filteredOrders.reduce((sum, order) => sum + order.total, 0),
+          'Pesanan Selesai': filteredOrders.filter(o => o.status === 'completed').length,
+          'Pesanan Pending': filteredOrders.filter(o => o.status === 'pending').length
+        },
+        {}
+      ]
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet([])
+
+      // Add summary
+      XLSX.utils.sheet_add_json(ws, summary, { origin: 'A1' })
+
+      // Add header row
+      const headers = ['ID Pesanan', 'Tanggal', 'Nama Pelanggan', 'No HP', 'Alamat', 'Status', 'Total', 'Item Pesanan']
+      XLSX.utils.sheet_add_aoa(ws, headers, { origin: 'A3' })
+
+      // Add data
+      XLSX.utils.sheet_add_json(ws, data, { origin: 'A4' })
+
+      // Auto-fit columns
+      const colWidths = [
+        { wch: 15 }, // ID Pesanan
+        { wch: 20 }, // Tanggal
+        { wch: 25 }, // Nama Pelanggan
+        { wch: 15 }, // No HP
+        { wch: 30 }, // Alamat
+        { wch: 15 }, // Status
+        { wch: 15 }, // Total
+        { wch: 50 }  // Item Pesanan
+      ]
+      ws['!cols'] = colWidths
+
+      // Create workbook
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Laporan Penjualan')
+
+      // Write and download file
+      XLSX.writeFile(wb, `laporan-penjualan-${new Date().toISOString().split('T')[0]}.xlsx`)
+
+      toast.success('Laporan berhasil di-export!', {
+        description: `${filteredOrders.length} pesanan telah di-download (Excel)`,
+        position: 'top-center'
+      })
+    }).catch(error => {
+      console.error('[exportToExcel] Error:', error)
+      toast.error('Gagal membuat file Excel', {
+        description: 'Silakan coba lagi nanti',
+        position: 'top-center'
+      })
+    })
   }
 
   const sendEmailReport = async () => {
@@ -1285,12 +1372,45 @@ export default function AdminPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  Format File
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setExportFormat('csv')}
+                    className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                      exportFormat === 'csv'
+                        ? 'border-orange-500 bg-orange-50 text-orange-700'
+                        : 'border-gray-200 hover:border-orange-300 text-gray-600'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4" />
+                    CSV
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExportFormat('xlsx')}
+                    className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                      exportFormat === 'xlsx'
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 hover:border-green-300 text-gray-600'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Excel (.xlsx)
+                  </button>
+                </div>
+              </div>
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-xs sm:text-sm text-gray-600">
                 <p className="font-medium mb-1">💡 Tips:</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Kosongkan tanggal untuk export semua data</li>
-                  <li>File akan diunduh dalam format CSV</li>
-                  <li>Bisa dibuka di Excel, Google Sheets, dll</li>
+                  <li>CSV: Ringan, kompatibel dengan semua aplikasi spreadsheet</li>
+                  <li>Excel (.xlsx): Dengan ringkasan otomatis, formatting lebih baik</li>
+                  <li>Bisa dibuka di Excel, Google Sheets, Numbers, dll</li>
                 </ul>
               </div>
             </div>
@@ -1302,17 +1422,18 @@ export default function AdminPage() {
                   setExportStartDate('')
                   setExportEndDate('')
                   setExportStatus('all')
+                  setExportFormat('csv')
                 }}
                 className="w-full sm:w-auto border-orange-200 text-gray-700 hover:bg-orange-50"
               >
                 Batal
               </Button>
               <Button
-                onClick={exportToCSV}
+                onClick={exportReport}
                 className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Export CSV
+                Export {exportFormat === 'xlsx' ? 'Excel' : 'CSV'}
               </Button>
             </DialogFooter>
           </DialogContent>
